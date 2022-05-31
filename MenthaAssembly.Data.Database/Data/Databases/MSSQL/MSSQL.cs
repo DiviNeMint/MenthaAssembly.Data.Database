@@ -69,7 +69,7 @@ namespace MenthaAssembly.Data
                     Builder.DataSource = $"{LocalAddress}\\SQLEXPRESS";
             }
         }
-MenthaAssembly.Data.Database
+
         public int Timeout
         {
             get => Builder.ConnectTimeout;

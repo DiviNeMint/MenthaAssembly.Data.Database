@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Threading.Tasks;
 
 namespace MenthaAssembly.Data
 {
-    public interface IDatabaseLinq<T> : IAsyncEnumerable<T>
+    public interface IDatabaseSelectLinq<T> : IAsyncEnumerable<T>
     {
         IDatabaseSelectLinq<T> Select(Expression<Func<T, object>> Selector);
 
-        IDatabaseLinq<T> Where(Expression<Func<T, bool>> Prediction);
-
-        Task Remove();
+        IDatabaseSelectLinq<T> Where(Expression<Func<T, bool>> Prediction);
 
     }
 

@@ -221,8 +221,7 @@ namespace MenthaAssembly.Data
         }
         public async Task Remove<T>(Expression<Func<T, bool>> Prediction)
             where T : new()
-            => await Where(Prediction)
-                         .Remove();
+            => await Where(Prediction).Remove();
 
         public async Task Modify<T>(T Item, params string[] PropertyNames)
             where T : class, new()
@@ -322,73 +321,21 @@ namespace MenthaAssembly.Data
                 }).ToArray());
         }
 
-        public async Task<IEnumerable<T>> As<T>()
+        public IAsyncEnumerable<T> As<T>()
             where T : new()
-            => await new MSSQLLinq<T>(Database, Name).Query();
+            => new MSSQLLinq<T>(this);
 
-        public IDatabaseLinq<U> Select<T, U>(Expression<Func<T, U>> Selector)
+        public IAsyncEnumerable<U> Select<T, U>(Expression<Func<T, U>> Selector)
             where T : new()
-            => new MSSQLLinq<T>(Database, Name).Select(Selector);
+            => new MSSQLLinq<T>(this).Select(Selector);
 
-        public IDatabaseLinq<T> Select<T>(params Expression<Func<T, object>>[] Selectors)
+        public IDatabaseSelectLinq<T> Select<T>(Expression<Func<T, object>> Selector)
             where T : new()
-            => new MSSQLLinq<T>(Database, Name).Select(Selectors);
+            => new MSSQLLinq<T>(this).Select(Selector);
 
-        public IDatabaseLinq<T> Where<T>(Expression<Func<T, bool>> Predict)
+        public IDatabaseLinq<T> Where<T>(Expression<Func<T, bool>> Prediction)
             where T : new()
-            => new MSSQLLinq<T>(Database, Name).Where(Predict);
-
-        //public async Task<IEnumerable<T>> Where<T>(string Condition, params SqlParameter[] Parameters)
-        //    where T : class, new()
-        //{
-        //    if (string.IsNullOrEmpty(Condition))
-        //        throw new ArgumentNullException();
-
-        //    List<T> Results = new List<T>();
-
-        //    bool Success = await Database.Execute(
-        //        $"Select * From [{Name}] Where {Condition}",
-        //        (Reader) =>
-        //        {
-        //            IEnumerable<PropertyInfo> PropertyInfos = null;
-        //            while (Reader.Read())
-        //            {
-        //                if (PropertyInfos is null)
-        //                {
-        //                    string[] DataNames = new string[Reader.FieldCount];
-        //                    for (int i = 0; i < Reader.FieldCount; i++)
-        //                        DataNames[i] = Reader.GetName(i);
-
-        //                    PropertyInfos = typeof(T).GetProperties(DataNames);
-        //                }
-
-        //                T Item = new T();
-        //                foreach (PropertyInfo Info in PropertyInfos)
-        //                {
-        //                    object Value = Reader[Info.Name];
-        //                    if (Value is DBNull)
-        //                    {
-        //                        Info.SetValue(Item, null);
-        //                        continue;
-        //                    }
-
-        //                    Info.SetValue(Item,
-        //                                  typeof(Enum).Equals(Info.PropertyType.BaseType) ?
-        //                                  Enum.Parse(Info.PropertyType, Value.ToString()) :
-        //                                  Convert.ChangeType(Value.ToString(), Info.PropertyType));
-        //                }
-
-        //                Results.Add(Item);
-        //            }
-        //            return true;
-        //        },
-        //        Parameters);
-
-        //    if (!Success)
-        //        return new T[0];
-
-        //    return Results;
-        //}
+            => new MSSQLLinq<T>(this).Where(Prediction);
 
     }
 

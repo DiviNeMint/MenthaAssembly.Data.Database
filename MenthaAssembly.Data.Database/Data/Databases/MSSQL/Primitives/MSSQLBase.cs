@@ -2,6 +2,7 @@
 using System.Data.SqlClient;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Data.Common;
 
 namespace MenthaAssembly.Data.Primitives
 {

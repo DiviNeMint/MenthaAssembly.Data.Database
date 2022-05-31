@@ -127,5 +127,11 @@ namespace MenthaAssembly.Data
                 yield return Item;
         }
 
+        internal protected string GetConnectionString()
+        {
+            Parent.Builder.InitialCatalog = Name;
+            return Parent.Builder.ConnectionString;
+        }
+
     }
 }
