@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Text;
 
 namespace MenthaAssembly.Data
 {
@@ -26,20 +27,27 @@ namespace MenthaAssembly.Data
 
         public override string ToString()
         {
-            string Result = ValueType.ToString();
-            if (Size > 0)
-                Result += $"({(int.MaxValue.Equals(Size) ? "Max" : Size.ToString())})";
+            StringBuilder Builder = new StringBuilder(ValueType.ToString());
+            try
+            {
+                if (Size > 0)
+                    Builder.Append(int.MaxValue.Equals(Size) ? "(Max)" : $"({Size})");
 
-            if (IsPrimaryKey)
-                Result += " Primary Key";
+                if (IsPrimaryKey)
+                    Builder.Append(" Primary Key");
 
-            if (IsIdentity)
-                Result += $" Identity({IdentitySeed},{IdentityDelta})";
+                if (IsIdentity)
+                    Builder.Append($" Identity({IdentitySeed},{IdentityDelta})");
 
-            if (!IsPrimaryKey &&!Nullable)
-                Result += " Not Null";
+                if (!IsPrimaryKey && !Nullable)
+                    Builder.Append(" Not Null");
 
-            return Result;
+                return Builder.ToString();
+            }
+            finally
+            {
+                Builder.Clear();
+            }
         }
 
     }

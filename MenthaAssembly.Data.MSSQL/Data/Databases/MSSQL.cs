@@ -100,11 +100,26 @@ namespace MenthaAssembly.Data
 
         public MSSQLDatabase this[string DatabaseName] => new MSSQLDatabase(this, DatabaseName);
 
-        public async Task<bool> ConnectionTest()
+        public bool ConnectionTest()
         {
-            SqlConnection Connection = new SqlConnection(Builder.ConnectionString);
             try
             {
+                using SqlConnection Connection = CreateConnection();
+                Connection.Open();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"{ex.Message}");
+            }
+
+            return false;
+        }
+        public async Task<bool> ConnectionTestAsync()
+        {
+            try
+            {
+                using SqlConnection Connection = CreateConnection();
                 await Connection.OpenAsync();
                 return true;
             }
@@ -112,32 +127,35 @@ namespace MenthaAssembly.Data
             {
                 Console.WriteLine($"{ex.Message}");
             }
-            finally
-            {
-                Connection.Close();
-                Connection.Dispose();
-            }
+
             return false;
         }
 
-        public async Task<string[]> GetDatabaseNames()
-            => await ExecuteAsync(
-                "SELECT name FROM sys.Databases",
-                (Reader) =>
-                {
-                    List<string> Result = new List<string>();
-                    while (Reader.Read())
-                        Result.Add(Reader["name"].ToString());
+        public IEnumerable<string> GetDatabaseNames()
+        {
+            using SqlDataReader Reader = ExcuteReader("SELECT name FROM sys.Databases");
+            while (Reader.Read())
+                yield return Reader["name"].ToString();
+        }
+        public async IAsyncEnumerable<string> GetDatabaseNamesAsync()
+        {
+            using SqlDataReader Reader = await ExcuteReaderAsync("SELECT name FROM sys.Databases");
+            while (Reader.Read())
+                yield return Reader["name"].ToString();
+        }
 
-                    return Result.ToArray();
-                });
+        public bool Contain(string DatabaseName)
+        {
+            using SqlDataReader Reader = ExcuteReader("Select name From sys.Databases Where name = @Name", new SqlParameter("@Name", DatabaseName));
+            return Reader.Read();
+        }
+        public async Task<bool> ContainAsync(string DatabaseName)
+        {
+            using SqlDataReader Reader = await ExcuteReaderAsync("Select name From sys.Databases Where name = @Name", new SqlParameter("@Name", DatabaseName));
+            return Reader.Read();
+        }
 
-        public async Task<bool> Contain(string DatabaseName)
-            => await ExecuteAsync("Select name From sys.Databases Where name = @Name",
-                             (Reader) => Reader.Read(),
-                             new SqlParameter("@Name", DatabaseName));
-
-        public async Task<bool> Create(string DatabaseName)
+        public bool Create(string DatabaseName)
         {
             try
             {
@@ -145,7 +163,7 @@ namespace MenthaAssembly.Data
                 //             $"On Primary (Name={DatabaseName}, Filename='{Path.Combine(FilePath, $"{DatabaseName}.mdf")}', Size=5, Maxsize=UNLIMITED, Filegrowth=10%) " +
                 //             $"Log On (Name={DatabaseName}_log, Filename='{Path.Combine(FilePath, $"{DatabaseName}_log.ldf")}', Size=1, Maxsize=20, Filegrowth=1)";
 
-                await ExecuteAsync(Builder.ConnectionString, $"Create Database {DatabaseName}");
+                Execute($"Create Database {DatabaseName}");
                 return true;
             }
             catch (Exception ex)
@@ -155,12 +173,15 @@ namespace MenthaAssembly.Data
 
             return false;
         }
-
-        public async Task<bool> Delete(string DatabaseName)
+        public async Task<bool> CreateAsync(string DatabaseName)
         {
             try
             {
-                await ExecuteAsync(Builder.ConnectionString, $"Drop Database {DatabaseName}");
+                //string sql = $"Create Database {DatabaseName} " +
+                //             $"On Primary (Name={DatabaseName}, Filename='{Path.Combine(FilePath, $"{DatabaseName}.mdf")}', Size=5, Maxsize=UNLIMITED, Filegrowth=10%) " +
+                //             $"Log On (Name={DatabaseName}_log, Filename='{Path.Combine(FilePath, $"{DatabaseName}_log.ldf")}', Size=1, Maxsize=20, Filegrowth=1)";
+
+                await ExecuteAsync($"Create Database {DatabaseName}");
                 return true;
             }
             catch (Exception ex)
@@ -170,30 +191,44 @@ namespace MenthaAssembly.Data
 
             return false;
         }
-        public async Task<bool> Delete(MSSQLDatabase Database)
-            => await Delete(Database.Name);
 
-        public void Execute(string TransactSQL, params SqlParameter[] Parameters)
-             => Execute(Builder.ConnectionString, TransactSQL, Parameters);
-        public T Execute<T>(string TransactSQL, Func<SqlDataReader, T> Handler, params SqlParameter[] Parameters)
-            => Execute(Builder.ConnectionString, TransactSQL, Handler, Parameters);
-
-        public void Execute(params SqlCommand[] Commands)
-            => Execute(Builder.ConnectionString, Commands);
-        public IEnumerable<T> Execute<T>(Func<SqlDataReader, T> Handler, params SqlCommand[] Commands)
-            => Execute(Builder.ConnectionString, Handler, Commands);
-
-        public async Task ExecuteAsync(string TransactSQL, params SqlParameter[] Parameters)
-             => await ExecuteAsync(Builder.ConnectionString, TransactSQL, Parameters);
-        public async Task<T> ExecuteAsync<T>(string TransactSQL, Func<SqlDataReader, T> Handler, params SqlParameter[] Parameters)
-            => await ExecuteAsync(Builder.ConnectionString, TransactSQL, Handler, Parameters);
-
-        public async Task ExecuteAsync(params SqlCommand[] Commands)
-            => await ExecuteAsync(Builder.ConnectionString, Commands);
-        public async IAsyncEnumerable<T> ExecuteAsync<T>(Func<SqlDataReader, T> Handler, params SqlCommand[] Commands)
+        public bool Delete(string DatabaseName)
         {
-            await foreach (T Item in ExecuteAsync(Builder.ConnectionString, Handler, Commands))
-                yield return Item;
+            try
+            {
+                Execute($"Drop Database {DatabaseName}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
+            return false;
+        }
+        public bool Delete(MSSQLDatabase Database)
+            => Delete(Database.Name);
+        public async Task<bool> DeleteAsync(string DatabaseName)
+        {
+            try
+            {
+                await ExecuteAsync($"Drop Database {DatabaseName}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
+            return false;
+        }
+        public async Task<bool> DeleteAsync(MSSQLDatabase Database)
+            => await DeleteAsync(Database.Name);
+
+        protected internal override SqlConnection CreateConnection()
+        {
+            Builder.InitialCatalog = string.Empty;
+            return new SqlConnection(Builder.ConnectionString);
         }
 
     }

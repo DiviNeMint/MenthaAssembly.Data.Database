@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
@@ -6,6 +6,7 @@
     <Platforms>AnyCPU</Platforms>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RootNamespace>MenthaAssembly</RootNamespace>
+    <AssemblyName>MenthaAssembly.Data.MSSQL</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

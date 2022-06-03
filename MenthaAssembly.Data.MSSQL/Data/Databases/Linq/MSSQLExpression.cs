@@ -20,7 +20,7 @@ namespace MenthaAssembly.Data.Primitives
                 ME.Expression.Equals(Selector.Parameters[0]))
                 return ME.Member.Name;
 
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
         public static string Parse<T>(Expression<Func<T, bool>> Predict, ref List<SqlParameter> Parameters)
             => ParseExpression(Predict.Parameters[0], Predict.Body, ref Parameters);
@@ -44,7 +44,7 @@ namespace MenthaAssembly.Data.Primitives
                 string ArgName = $"@Arg{Values.Count}";
                 object MemberValue = ME.GetValue();
                 if (MemberValue is IEnumerable)
-                    throw new NotImplementedException();
+                    throw new NotSupportedException();
 
                 Values.Add(new SqlParameter(ArgName, MemberValue));
                 return ArgName;
@@ -84,7 +84,7 @@ namespace MenthaAssembly.Data.Primitives
                 }
             }
 
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
         private static string ParseMethod(ParameterExpression Parameter, MethodCallExpression Method, ref List<SqlParameter> Values)
         {
@@ -108,7 +108,7 @@ namespace MenthaAssembly.Data.Primitives
                     ME.Expression.Equals(Parameter))
                     return $"({ME.Member.Name} In {ParseMethod(Parameter, ExtensionMethod, ref Values)})";
 
-                throw new NotImplementedException();
+                throw new NotSupportedException();
             }
 
             switch (Method.Method.Name)
@@ -126,7 +126,7 @@ namespace MenthaAssembly.Data.Primitives
                     }
             }
 
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
         private static string ParseEnumerable(IEnumerable ArrayValue, ref List<SqlParameter> Values)
         {
